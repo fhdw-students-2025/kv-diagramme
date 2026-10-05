@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KV-Diagramme</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="toolbar">
+      <h1>KV-Diagramme</h1>
+      <div class="segmented" role="radiogroup" aria-label="Beschriftung">
+        <label><input type="radio" name="labelStyle" value="bars"><span>Balken</span></label>
+        <label><input type="radio" name="labelStyle" value="gray"><span>Gray-Code</span></label>
+      </div>
+      <label class="switch"><input type="checkbox" id="showIndex" role="switch"><span class="switch-track"></span>Index</label>
+    </div>
+    <div class="toolbar">
+      <button type="button" id="importJson" class="btn btn--outline" data-icon="upload">Import</button>
+      <span class="label">Export</span>
+      <div class="btn-group" role="group" aria-label="Alle Diagramme exportieren">
+        <button type="button" id="allSvg" class="btn btn--outline">SVG</button>
+        <button type="button" id="allPng" class="btn btn--outline">PNG</button>
+        <button type="button" id="exportJson" class="btn btn--outline">JSON</button>
+      </div>
+      <button type="button" id="add" class="btn btn--primary" data-icon="plus">Diagramm</button>
+    </div>
+    <input type="file" id="file" accept="application/json,.json" hidden>
+  </header>
+  <main id="diagrams"></main>
+  <p id="message" class="toast" role="status" hidden></p>
+  <script>window.MathJax = { startup: { typeset: false }, svg: { fontCache: 'none' } };</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

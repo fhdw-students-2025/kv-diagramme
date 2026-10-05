@@ -1,0 +1,273 @@
+/* Nur die Oberfläche – das Diagramm selbst wird in app.js über SVG-Attribute gestaltet.
+   Gestaltung angelehnt an shadcn/ui (Zinc). Alle Bedienelemente sind gleich hoch (--control-h). */
+
+:root {
+  --background: #ffffff;
+  --page: #fafafa;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --ring: #a1a1aa;
+  --primary: #18181b;
+  --primary-hover: #27272a;
+  --primary-foreground: #fafafa;
+  --destructive: #dc2626;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --control-h: 32px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--foreground);
+  background: var(--page);
+}
+
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+h1, h2 { margin: 0; font-size: 15px; font-weight: 600; }
+
+.label { font-size: 12px; font-weight: 500; color: var(--muted-foreground); white-space: nowrap; }
+.hint { margin: 0; font-size: 12px; color: var(--muted-foreground); }
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--control-h);
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--foreground);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn .icon { flex: none; }
+
+.btn--primary { background: var(--primary); color: var(--primary-foreground); }
+.btn--primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn--outline { background: var(--background); border-color: var(--border); box-shadow: var(--shadow); }
+.btn--outline:hover:not(:disabled), .btn--ghost:hover:not(:disabled) { background: var(--muted); }
+
+.btn--icon { width: var(--control-h); padding: 0; color: var(--muted-foreground); }
+.btn--icon:hover:not(:disabled) { color: var(--foreground); }
+
+.btn-group { display: inline-flex; }
+.btn-group .btn:not(:first-child) { margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.btn-group .btn:not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+/* ---------- Eingaben ---------- */
+
+.input {
+  height: var(--control-h);
+  padding: 0 10px;
+  font: inherit;
+  color: var(--foreground);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.input:focus-visible { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px rgb(161 161 170 / 0.3); }
+.input--name { width: 100%; max-width: 220px; }
+.input--var { width: 56px; text-align: center; }
+
+/* Umschalter aus Radiobuttons */
+.segmented {
+  display: inline-flex;
+  height: var(--control-h);
+  padding: 3px;
+  background: var(--muted);
+  border-radius: var(--radius);
+}
+.segmented label { display: flex; }
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented span {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  border-radius: calc(var(--radius) - 3px);
+  cursor: pointer;
+}
+.segmented input:checked + span { background: var(--background); color: var(--foreground); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.segmented input:focus-visible + span { outline: 2px solid var(--ring); outline-offset: 1px; }
+
+/* Checkbox als Schalter */
+.switch { display: inline-flex; align-items: center; gap: 8px; height: var(--control-h); font-weight: 500; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--border);
+  border-radius: 999px;
+  transition: background-color 0.15s;
+}
+.switch-track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: var(--background);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  transition: transform 0.15s;
+}
+.switch input:checked + .switch-track { background: var(--primary); }
+.switch input:checked + .switch-track::after { transform: translateX(16px); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* ---------- Kopfleiste ---------- */
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 12px 20px;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+header h1 { margin-right: 4px; }
+
+/* ---------- Diagrammkarten ---------- */
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 20px 40px;
+}
+
+.card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 20px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+}
+
+.canvas {
+  flex: none;
+  max-width: 100%;
+  overflow-x: auto;
+  align-self: flex-start;
+  border-radius: var(--radius);
+  line-height: 0;
+}
+.canvas svg { max-width: 100%; height: auto; }
+.card.editing .canvas { outline: 2px solid var(--group); outline-offset: 2px; }
+
+.panel {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  container-type: inline-size;
+}
+
+.panel-head { display: flex; align-items: center; gap: 2px; }
+.panel-head h2 { flex: 1; }
+
+/* Formular: Beschriftung links, Inhalt rechts; Beschriftung steht auf Höhe der ersten Zeile. */
+.form {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.form > .label { line-height: var(--control-h); }
+.form-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+@container (max-width: 360px) {
+  .form { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .form > .label { line-height: normal; }
+  .form-cell { margin-bottom: 10px; }
+  .input--var { width: 44px; }
+}
+
+/* ---------- Gruppen ---------- */
+
+.groups { align-self: stretch; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 0 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.group.active { box-shadow: inset 3px 0 0 var(--group); padding-bottom: 10px; }
+.group-row { display: flex; align-items: center; gap: 8px; height: calc(var(--control-h) - 2px); }
+.group-row .info { flex: 1; }
+
+.dot { flex: none; width: 12px; height: 12px; background: var(--group); border-radius: 50%; }
+.group-editor { padding-right: 10px; }
+
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--muted-foreground);
+  background: var(--background);
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+}
+.swatch.selected { box-shadow: 0 0 0 2px var(--foreground); }
+.swatch input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.swatch:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* ---------- Meldungen ---------- */
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 2;
+  max-width: min(420px, calc(100vw - 40px));
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+}
+.toast.error { color: var(--destructive); border-color: #fecaca; }
