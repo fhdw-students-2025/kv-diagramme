@@ -724,7 +724,7 @@ function cardGroups(d, card, activeGroup, redraw) {
     const item = h('li', { className: active ? 'group active' : 'group' },
       h('div', { className: 'group-row' },
         h('span', { className: 'dot' }),
-        h('span', { className: 'info' }, `Gruppe ${gi + 1} · ${g.cells.length} ${g.cells.length === 1 ? 'Zelle' : 'Zellen'}`),
+        h('span', { className: 'info' }, `Gruppe ${gi + 1}`),
         button(null, {
           variant: 'ghost',
           size: 'icon',
