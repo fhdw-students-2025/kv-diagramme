@@ -2,7 +2,6 @@
 
 const FORMAT = 'kv-diagramme';
 const VERSION = 1;
-const STORAGE_KEY = 'kv-diagramme';
 
 // Feste Maße: jedes Diagramm wird ausschließlich aus diesen Werten aufgebaut.
 const CELL = 60;
@@ -48,12 +47,35 @@ function defaultDiagram() {
   return { name: 'f', vars: [...DEFAULT_VARS], cells: Array(16).fill(''), groups: [] };
 }
 
-function defaultState() {
+// Beispieldaten, mit denen jeder Seitenaufruf beginnt; es wird nichts im Browser gespeichert.
+function sampleState() {
+  const cells = (size, values) => Array.from({ length: size }, (_, i) => values[i] ?? '0');
   return {
     format: FORMAT,
     version: VERSION,
     settings: { labelStyle: 'bars', showIndex: true },
-    diagrams: [defaultDiagram()],
+    diagrams: [
+      {
+        // f = x̄₁x̄₂ + x₂x₄; die erste Gruppe liegt in den vier Ecken und wird über den Rand geschlossen.
+        name: 'f',
+        vars: ['x_1', 'x_2', 'x_3', 'x_4'],
+        cells: cells(16, Object.fromEntries([0, 1, 2, 3, 5, 7, 13, 15].map((i) => [i, '1']))),
+        groups: [
+          { color: PALETTE[0], cells: [0, 1, 2, 3] },
+          { color: PALETTE[1], cells: [5, 7, 13, 15] },
+        ],
+      },
+      {
+        // g = c + a b̄, mit einer Don't-care-Stelle; die Gruppen überlappen sich.
+        name: 'g',
+        vars: ['a', 'b', 'c'],
+        cells: cells(8, { 1: '1', 3: '1', 4: '1', 5: '1', 7: 'X' }),
+        groups: [
+          { color: PALETTE[2], cells: [1, 3, 5, 7] },
+          { color: PALETTE[3], cells: [4, 5] },
+        ],
+      },
+    ],
   };
 }
 
@@ -95,16 +117,6 @@ function normalize(data) {
       };
     }),
   };
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return normalize(JSON.parse(raw));
-  } catch (err) {
-    console.warn('Gespeicherter Stand konnte nicht geladen werden:', err);
-  }
-  return defaultState();
 }
 
 function setVarCount(d, n) {
@@ -595,7 +607,7 @@ function row(label, ...children) {
 
 // ---------- Oberfläche ----------
 
-let state = loadState();
+let state = sampleState();
 let editing = null; // { diagram, group } während Zellen einer Gruppe gewählt werden
 
 const list = document.getElementById('diagrams');
@@ -609,19 +621,6 @@ function notify(text, isError = false) {
   message.hidden = false;
   clearTimeout(messageTimer);
   messageTimer = setTimeout(() => { message.hidden = true; }, 6000);
-}
-
-function save() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (err) {
-    console.warn('Speichern im Browser nicht möglich:', err);
-  }
-}
-
-function update() {
-  save();
-  renderAll();
 }
 
 function renderAll() {
@@ -643,9 +642,8 @@ function renderCard(d, di) {
   if (activeGroup) card.style.setProperty('--group', activeGroup.color);
 
   const canvas = h('div', { className: 'canvas' });
-  // Bei Texteingaben wird nur das SVG neu gezeichnet, damit das Eingabefeld den Fokus behält.
+  // Bei Texteingaben und Farbwahl wird nur das SVG neu gezeichnet, damit das Eingabefeld den Fokus behält.
   const draw = () => canvas.replaceChildren(renderDiagramSVG(d, state.settings, { interactive: true, highlight: activeGroup }));
-  const redraw = () => { draw(); save(); };
   draw();
 
   canvas.addEventListener('click', (e) => {
@@ -659,14 +657,14 @@ function renderCard(d, di) {
     } else {
       d.cells[idx] = VALUES[(VALUES.indexOf(d.cells[idx]) + 1) % VALUES.length];
     }
-    update();
+    renderAll();
   });
 
   card.append(canvas, h('div', { className: 'panel' },
     cardHead(d, di, activeGroup),
     h('div', { className: 'form' },
-      ...cardFields(d, redraw),
-      ...cardGroups(d, card, activeGroup, redraw),
+      ...cardFields(d, draw),
+      ...cardGroups(d, card, activeGroup, draw),
       ...cardExport(d))));
   return card;
 }
@@ -675,18 +673,18 @@ function cardHead(d, di, activeGroup) {
   const move = (to) => {
     state.diagrams.splice(di, 1);
     state.diagrams.splice(to, 0, d);
-    update();
+    renderAll();
   };
   const remove = () => {
     if (hasContent(d) && !confirm(`Diagramm ${di + 1} wirklich löschen?`)) return;
     state.diagrams.splice(di, 1);
     if (!state.diagrams.length) state.diagrams.push(defaultDiagram());
     if (activeGroup) editing = null;
-    update();
+    renderAll();
   };
   const duplicate = () => {
     state.diagrams.splice(di + 1, 0, JSON.parse(JSON.stringify(d)));
-    update();
+    renderAll();
   };
   return h('div', { className: 'panel-head' },
     h('h2', {}, `Diagramm ${di + 1}`),
@@ -709,7 +707,7 @@ function cardFields(d, redraw) {
       h('div', { className: 'inline' },
         segmented('Anzahl Variablen', ['2', '3', '4'], String(d.vars.length), (n) => {
           setVarCount(d, Number(n));
-          update();
+          renderAll();
         }),
         ...d.vars.map((name, i) => input(name, (v) => { d.vars[i] = v; }, {
           className: 'input input--var', ariaLabel: `Variable ${i + 1} von ${d.vars.length}`,
@@ -740,7 +738,7 @@ function cardGroups(d, card, activeGroup, redraw) {
           onClick: () => {
             d.groups.splice(gi, 1);
             if (active) editing = null;
-            update();
+            renderAll();
           },
         })));
     item.style.setProperty('--group', g.color);
@@ -752,7 +750,7 @@ function cardGroups(d, card, activeGroup, redraw) {
     const group = { color: nextColor(d), cells: [] };
     d.groups.push(group);
     editing = { diagram: d, group };
-    update();
+    renderAll();
   };
   return row('Gruppen',
     items.length ? h('ul', { className: 'groups' }, ...items) : null,
@@ -774,7 +772,7 @@ function groupEditor(g, item, card, redraw) {
         card.style.setProperty('--group', g.color);
         redraw();
       },
-      onchange: update,
+      onchange: renderAll,
     }));
   if (custom) picker.style.background = g.color;
   return h('div', { className: 'form-cell group-editor' },
@@ -783,7 +781,7 @@ function groupEditor(g, item, card, redraw) {
         type: 'button',
         className: color === g.color ? 'swatch selected' : 'swatch',
         title: color,
-        onclick: () => { g.color = color; update(); },
+        onclick: () => { g.color = color; renderAll(); },
       });
       swatch.style.background = color;
       return swatch;
@@ -805,20 +803,20 @@ for (const node of document.querySelectorAll('[data-icon]')) node.prepend(icon(n
 
 document.getElementById('add').addEventListener('click', () => {
   state.diagrams.push(defaultDiagram());
-  update();
+  renderAll();
   list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 
 for (const radio of document.querySelectorAll('input[name="labelStyle"]')) {
   radio.addEventListener('change', () => {
     state.settings.labelStyle = radio.value;
-    update();
+    renderAll();
   });
 }
 
 document.getElementById('showIndex').addEventListener('change', (e) => {
   state.settings.showIndex = e.target.checked;
-  update();
+  renderAll();
 });
 
 document.getElementById('allSvg').addEventListener('click', () => exportSvg(renderAllSVG(), 'kv-diagramme.svg'));
@@ -845,7 +843,7 @@ fileInput.addEventListener('change', async () => {
     if (state.diagrams.some(hasContent) && !confirm('Aktuelle Diagramme durch die importierte Datei ersetzen?')) return;
     state = next;
     editing = null;
-    update();
+    renderAll();
     notify(`${next.diagrams.length} ${next.diagrams.length === 1 ? 'Diagramm' : 'Diagramme'} importiert.`);
   } catch (err) {
     notify(`Import fehlgeschlagen: ${err.message}`, true);
